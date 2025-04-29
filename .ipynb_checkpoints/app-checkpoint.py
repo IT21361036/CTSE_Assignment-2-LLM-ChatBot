@@ -20,12 +20,9 @@ from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-from dotenv import load_dotenv
-load_dotenv()
-
 # Configuration
 class Config:
-    OPENROUTER_API_KEY = os.environ['OPENROUTER_API_KEY']
+    OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
     OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1" # Replace with your actual API key
    # OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
     MODEL_NAME = "mistralai/mistral-7b-instruct"  # Cost-effective model
@@ -34,7 +31,8 @@ class Config:
     CONTEXT_TOKENS = 3000  # Max context to send to LLM
     CHUNK_SIZE = 500  # Size of text chunks for processing
 
-
+from dotenv import load_dotenv
+load_dotenv()
 
 # Initialize OpenAI client for OpenRouter
 client = openai.OpenAI(

@@ -25,7 +25,7 @@ load_dotenv()
 
 # Configuration
 class Config:
-    OPENROUTER_API_KEY = os.environ['OPENROUTER_API_KEY']
+    OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
     OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1" # Replace with your actual API key
    # OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
     MODEL_NAME = "mistralai/mistral-7b-instruct"  # Cost-effective model
@@ -33,7 +33,6 @@ class Config:
     MAX_TOKENS = 1000  # Limit response length
     CONTEXT_TOKENS = 3000  # Max context to send to LLM
     CHUNK_SIZE = 500  # Size of text chunks for processing
-
 
 
 # Initialize OpenAI client for OpenRouter
