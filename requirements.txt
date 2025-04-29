@@ -1,2 +1,9 @@
-openai
+openai>=1.0.0
 python-dotenv
+PyPDF2
+scikit-learn
+numpy
+streamlit
+streamlit-chat
+python-pptx
+langchain-openai
