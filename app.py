@@ -1,4 +1,6 @@
 # This chatbot answers questions based on CTSE lecture notes using OpenRouter's LLM API.
+
+# This chatbot answers questions based on CTSE lecture notes using OpenRouter's LLM API.
 import os
 import openai
 from PyPDF2 import PdfReader
@@ -18,9 +20,12 @@ from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
+from dotenv import load_dotenv
+load_dotenv()
+
 # Configuration
 class Config:
-    OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "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")
+    OPENROUTER_API_KEY = os.environ['OPENROUTER_API_KEY']
     OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1" # Replace with your actual API key
    # OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
     MODEL_NAME = "mistralai/mistral-7b-instruct"  # Cost-effective model
@@ -28,6 +33,9 @@ class Config:
     MAX_TOKENS = 1000  # Limit response length
     CONTEXT_TOKENS = 3000  # Max context to send to LLM
     CHUNK_SIZE = 500  # Size of text chunks for processing
+
+
+
 # Initialize OpenAI client for OpenRouter
 client = openai.OpenAI(
     base_url=Config.OPENROUTER_BASE_URL,
@@ -46,6 +54,7 @@ def extract_text_from_pdf(pdf_path: str) -> str:
     except Exception as e:
         print(f"Error reading PDF {pdf_path}: {str(e)}")
     return text
+
 #new
 def extract_text_from_pptx(pptx_path: str) -> str:
     """Extract text from a PowerPoint file"""
@@ -118,6 +127,9 @@ class LectureNotesKB:
         top_indices = similarities.argsort()[-top_k:][::-1]
         
         return [self.chunks[lecture_name][i] for i in top_indices]
+
+
+
 # Chatbot Class with LangChain
 class LectureChatbot:
     def __init__(self):
@@ -260,6 +272,7 @@ def main():
                 
     except Exception as e:
         st.error(f"Error loading lectures from {LECTURE_NOTES_DIR}: {str(e)}")
+
 # Run the chatbot
 if __name__ == "__main__":
     main()

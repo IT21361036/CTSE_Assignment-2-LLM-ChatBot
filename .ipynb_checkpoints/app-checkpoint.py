@@ -1,29 +1,46 @@
+# This chatbot answers questions based on CTSE lecture notes using OpenRouter's LLM API.
+
+# This chatbot answers questions based on CTSE lecture notes using OpenRouter's LLM API.
 import os
+import openai
 from PyPDF2 import PdfReader
 from typing import List
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import ipywidgets as widgets
+from IPython.display import display, Markdown, clear_output
 import streamlit as st
 from streamlit_chat import message
-from pptx import Presentation
+from pptx import Presentation  # For PowerPoint files
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnablePassthrough
+from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
+from dotenv import load_dotenv
+load_dotenv()
+
 # Configuration
 class Config:
-    OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-    if not OPENROUTER_API_KEY:
-        raise ValueError("OPENROUTER_API_KEY environment variable not set.")
-    OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-    MODEL_NAME = "mistralai/mistral-7b-instruct"
-    TEMPERATURE = 0.3
-    MAX_TOKENS = 1000
-    CONTEXT_TOKENS = 3000
-    CHUNK_SIZE = 500
+    OPENROUTER_API_KEY = os.environ['OPENROUTER_API_KEY']
+    OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1" # Replace with your actual API key
+   # OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+    MODEL_NAME = "mistralai/mistral-7b-instruct"  # Cost-effective model
+    TEMPERATURE = 0.3  # Controls randomness of responses
+    MAX_TOKENS = 1000  # Limit response length
+    CONTEXT_TOKENS = 3000  # Max context to send to LLM
+    CHUNK_SIZE = 500  # Size of text chunks for processing
+
+
+
+# Initialize OpenAI client for OpenRouter
+client = openai.OpenAI(
+    base_url=Config.OPENROUTER_BASE_URL,
+    api_key=Config.OPENROUTER_API_KEY,
+)
 
 # Document Processing Functions
 def extract_text_from_pdf(pdf_path: str) -> str:
@@ -33,11 +50,12 @@ def extract_text_from_pdf(pdf_path: str) -> str:
         with open(pdf_path, "rb") as file:
             reader = PdfReader(file)
             for page in reader.pages:
-                text += page.extract_text() or ""
+                text += page.extract_text() or ""  # Handle None returns
     except Exception as e:
-        st.error(f"Error reading PDF {pdf_path}: {str(e)}")
+        print(f"Error reading PDF {pdf_path}: {str(e)}")
     return text
 
+#new
 def extract_text_from_pptx(pptx_path: str) -> str:
     """Extract text from a PowerPoint file"""
     text = ""
@@ -48,7 +66,7 @@ def extract_text_from_pptx(pptx_path: str) -> str:
                 if hasattr(shape, "text"):
                     text += shape.text + "\n"
     except Exception as e:
-        st.error(f"Error reading PPTX {pptx_path}: {str(e)}")
+        print(f"Error reading PPTX {pptx_path}: {str(e)}")
     return text
 
 def chunk_text(text: str, chunk_size: int = Config.CHUNK_SIZE) -> List[str]:
@@ -79,11 +97,11 @@ class LectureNotesKB:
         elif file_path.lower().endswith(".pptx"):
             text = extract_text_from_pptx(file_path)
         else:
-            st.error(f"Unsupported file type for {file_path}")
+            print(f"Unsupported file type for {file_path}")
             return
         
         if not text:
-            st.warning(f"No text extracted from {file_path}")
+            print(f"Warning: No text extracted from {file_path}")
             return
             
         chunks = chunk_text(text)
@@ -93,12 +111,12 @@ class LectureNotesKB:
         self.chunks[lecture_name] = chunks
         self.vectorizers[lecture_name] = vectorizer
         self.tfidf_matrices[lecture_name] = tfidf_matrix
-        st.info(f"Loaded lecture: {lecture_name} ({len(chunks)} chunks)")
+        print(f"Loaded lecture: {lecture_name} ({len(chunks)} chunks)")
      
     def get_relevant_chunks(self, lecture_name: str, query: str, top_k: int = 3) -> List[str]:
         """Retrieve most relevant text chunks for a query"""
         if lecture_name not in self.notes:
-            st.error(f"Lecture {lecture_name} not found in knowledge base")
+            print(f"Lecture {lecture_name} not found in knowledge base")
             return []
             
         vectorizer = self.vectorizers[lecture_name]
@@ -109,6 +127,8 @@ class LectureNotesKB:
         top_indices = similarities.argsort()[-top_k:][::-1]
         
         return [self.chunks[lecture_name][i] for i in top_indices]
+
+
 
 # Chatbot Class with LangChain
 class LectureChatbot:
@@ -253,5 +273,6 @@ def main():
     except Exception as e:
         st.error(f"Error loading lectures from {LECTURE_NOTES_DIR}: {str(e)}")
 
+# Run the chatbot
 if __name__ == "__main__":
     main()
