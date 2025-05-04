@@ -1,4 +1,3 @@
-%%writefile app.py
 # This chatbot answers questions based on CTSE lecture notes using OpenRouter's LLM API.
 import os
 import openai
