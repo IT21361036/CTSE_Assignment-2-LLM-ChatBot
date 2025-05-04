@@ -1,5 +1,4 @@
-# This chatbot answers questions based on CTSE lecture notes using OpenRouter's LLM API.
-
+%%writefile app.py
 # This chatbot answers questions based on CTSE lecture notes using OpenRouter's LLM API.
 import os
 import openai
@@ -27,7 +26,6 @@ load_dotenv()
 class Config:
     OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
     OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1" # Replace with your actual API key
-   # OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
     MODEL_NAME = "mistralai/mistral-7b-instruct"  # Cost-effective model
     TEMPERATURE = 0.3  # Controls randomness of responses
     MAX_TOKENS = 1000  # Limit response length
@@ -202,10 +200,118 @@ Lecture Context:
 def main():
     st.set_page_config(page_title="CTSE Lecture Chatbot", page_icon="📚", layout="wide")
     st.title("CTSE Lecture Chatbot")
-    
+
     chatbot = LectureChatbot()
     LECTURE_NOTES_DIR = "ctse_lecture_notes"
     os.makedirs(LECTURE_NOTES_DIR, exist_ok=True)
+
+    # Add custom CSS for sidebar styling
+    st.markdown("""
+        <style>
+        /* Sidebar Styling */
+        .sidebar .sidebar-content {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar .stButton>button {
+            width: 100%;
+            background-color: #007bff;
+            color: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sidebar .stButton>button:hover {
+            background-color: #0056b3;
+        }
+        .sidebar-logo {
+            display: block;
+            margin: 0 auto 20px auto;
+            width: 100px;
+            border-radius: 10px;
+        }
+        .sidebar-title {
+            text-align: center;
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .sidebar-divider {
+            border-top: 1px solid #ddd;
+            margin: 15px 0;
+        }
+        .chat-history {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+        }
+        .chat-message.user {
+            background-color: #e6f3ff;
+        }
+        .chat-message.assistant {
+            background-color: #f0f0f0;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    # Sidebar
+    with st.sidebar:
+        st.markdown('<div class="sidebar-title">CTSE Chatbot</div>', unsafe_allow_html=True)
+        # Placeholder for logo (you can replace with an actual image URL or local file)
+        #st.image("https://via.placeholder.com/100?text=CTSE", caption="", use_container_width=True, output_format="PNG")
+       # st.markdown('<hr class="sidebar-divider">', unsafe_allow_html=True)
+        
+        # Navigation Options
+        if st.button("🏠 Home"):
+            st.session_state.messages = []
+            st.rerun()
+        if st.button("💬 New Chat"):
+            st.session_state.messages = []
+            if "selected_lecture" in st.session_state:
+                chatbot.clear_history(f"{st.session_state.selected_lecture}_session")
+            st.rerun()
+        
+        st.markdown('<hr class="sidebar-divider">', unsafe_allow_html=True)
+        
+        # Chat History Section
+        st.markdown("### Chat History")
+        if "messages" in st.session_state and "selected_lecture" in st.session_state:
+            with st.expander("View Chat History", expanded=False):
+                chat_container = st.container()
+                with chat_container:
+                    for idx, msg in enumerate(st.session_state.messages):
+                        if msg["lecture"] == st.session_state.selected_lecture:
+                            role_class = "user" if msg["role"] == "user" else "assistant"
+                            st.markdown(
+                                f'<div class="chat-message {role_class}">{msg["content"]}</div>',
+                                unsafe_allow_html=True
+                            )
+        else:
+            st.write("Start a new chat to see history.")
+        
+        st.markdown('<hr class="sidebar-divider">', unsafe_allow_html=True)
+        
+        # About Section
+        st.markdown("### About")
+        st.write("This chatbot assists with CTSE course questions based on lecture notes. Upload PDF or PPTX files to get started.")
+        st.markdown("**Developed by:** Saara M.K.F IT21361036")
+        st.markdown("**Version:** 1.0.0")
     
     # File upload
     uploaded_file = st.file_uploader("Upload a PDF or PPTX lecture", type=["pdf", "pptx"])
@@ -235,6 +341,7 @@ def main():
         
         # Lecture selection
         lecture_name = st.selectbox("Select Lecture:", list(available_lectures.keys()), key="lecture_select")
+        st.session_state.selected_lecture = lecture_name
         
         # Initialize session state for chat history
         if "messages" not in st.session_state:
