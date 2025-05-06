@@ -6,7 +6,7 @@ from typing import List
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import ipywidgets as widgets
+#import ipywidgets as widgets
 from IPython.display import display, Markdown, clear_output
 import streamlit as st
 from streamlit_chat import message
